@@ -1,43 +1,60 @@
 # Noma IQ HACS integration
 
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mnfjorge&repository=https%3A%2F%2Fgithub.com%2Fmnfjorge%2Fhacs-nomaiq&category=integration)
+[![Validate](https://github.com/mnfjorge/hacs-nomaiq/actions/workflows/validate.yml/badge.svg)](https://github.com/mnfjorge/hacs-nomaiq/actions/workflows/validate.yml)
+[![Lint](https://github.com/mnfjorge/hacs-nomaiq/actions/workflows/lint.yml/badge.svg)](https://github.com/mnfjorge/hacs-nomaiq/actions/workflows/lint.yml)
+
 ## About
 
-This integration exposes devices from the Noma IQ app. For now, only the current devices have been tested:
+This integration exposes devices from the Noma IQ app as Home Assistant entities, talking to the Ayla IoT cloud that backs the Noma IQ mobile app.
 
-- Garage Door Opener
-- Garage Door Opener's Light
+## Supported devices
+
+| Device                                               | Entity types                                                    |
+| ---------------------------------------------------- | --------------------------------------------------------------- |
+| Garage Door Opener (`gdo`)                           | `cover` (open / close / stop) and `light` for the opener's bulb |
+| Water Controller / Hose Control (`water-controller`) | One `switch` per paired hose unit                               |
+
+Other Noma IQ devices are not implemented yet — open an issue with the device's `oem_model_number` and property dump if you want one added.
+
+## Requirements
+
+- Home Assistant **2024.10.0** or newer
+- A working Noma IQ account (the same credentials you use in the mobile app)
 
 ## Installation
 
-Installation is done like any other Home Assistant HACS integration.
-
-### Requirements
-
-In order to setup this integration you will need:
-
-- A Home Assistant instance with [HACS](https://hacs.xyz/) installed.
-
-### HACS Installation
-
-Click the button below:
+### HACS (recommended)
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mnfjorge&repository=https%3A%2F%2Fgithub.com%2Fmnfjorge%2Fhacs-nomaiq&category=integration)
 
-Or search for "Noma IQ" in the HACS store. If you don't see it there, you can [add this repository url as a HACS custom repository](https://hacs.xyz/docs/faq/custom_repositories).
+Or, in HACS, search for "Noma IQ". If it doesn't appear, [add this repository URL as a HACS custom repository](https://hacs.xyz/docs/faq/custom_repositories) under the Integration category.
 
-## Home Assistant Integration
+### Manual
+
+1. Copy `custom_components/nomaiq/` into your Home Assistant `config/custom_components/` directory.
+2. Restart Home Assistant.
+
+## Configuration
 
 [![Open your Home Assistant instance and start setting up a new integration of a specific brand.](https://my.home-assistant.io/badges/brand.svg)](https://my.home-assistant.io/redirect/brand/?brand=+Noma+IQ)
 
-After installation, setup the integration via the web UI like any other integration. When prompted, provide the following:
+After installation, set up the integration via **Settings → Devices & Services → Add Integration → Noma IQ**. Provide:
 
-- Username: your username to log into the Noma IQ app
-- Password: your password to log into the Noma IQ app
+- **Username** — the email used to sign into the Noma IQ app
+- **Password** — your Noma IQ password
 
-### Troubleshooting
+Entities for each device on the account are created automatically. For the Water Controller, only paired hose units get a switch entity.
 
-If you are having issues connecting, make sure your credentials are correct using the Noma IQ in your mobile app. If you're still having trouble, you can open a new issue here: https://github.com/mnfjorge/hacs-nomaiq/issues/new
+## Troubleshooting
+
+| Problem                       | Fix                                                                                                                              |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Authentication fails**      | Confirm the credentials work in the Noma IQ mobile app, then re-authenticate via the integration's *Reconfigure* flow.           |
+| **Entities stuck unavailable**| The Ayla cloud or the device may be offline. Check the device in the Noma IQ app, then reload the integration.                   |
+| **Need debug logs**           | In `configuration.yaml`, add `logger:` with `custom_components.nomaiq: debug` and `ayla_iot_unofficial: debug`, then restart.    |
+| **A device isn't showing up** | The integration only exposes devices it knows how to model. Open an issue with the device's `oem_model_number` and property dump.|
 
 ## Contributions
 
-Contributions are welcome!
+Contributions are welcome — please open an issue first for non-trivial changes. The lint and validate workflows must pass on PRs.

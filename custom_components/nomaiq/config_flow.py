@@ -7,7 +7,6 @@ from typing import Any
 
 import ayla_iot_unofficial
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -37,9 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     password = data[CONF_PASSWORD]
 
     session = async_get_clientsession(hass)
-    hub = ayla_iot_unofficial.new_ayla_api(
-        username, password, CLIENT_ID, CLIENT_SECRET, session
-    )
+    hub = ayla_iot_unofficial.new_ayla_api(username, password, CLIENT_ID, CLIENT_SECRET, session)
     await hub.async_sign_in()
     return data
 
@@ -50,9 +47,7 @@ class NomaIQConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -71,13 +66,9 @@ class NomaIQConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=DOMAIN, data=user_input)
 
-        return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA, errors=errors)
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_reauth(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle reauth flow."""
         errors: dict[str, str] = {}
 
@@ -93,9 +84,7 @@ class NomaIQConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Update the existing entry with new data
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
-                )
+                entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
                 self.hass.config_entries.async_update_entry(entry, data=user_input)
                 await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
