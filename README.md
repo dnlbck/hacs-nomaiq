@@ -10,10 +10,11 @@ This integration exposes devices from the Noma IQ app as Home Assistant entities
 
 ## Supported devices
 
-| Device                                               | Entity types                                                    |
-| ---------------------------------------------------- | --------------------------------------------------------------- |
-| Garage Door Opener (`gdo`)                           | `cover` (open / close / stop) and `light` for the opener's bulb |
-| Water Controller / Hose Control (`water-controller`) | One `switch` per paired hose unit                               |
+| Device                                               | Entity types                                                                                                                                                  |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Garage Door Opener (`gdo`)                           | `cover` (open / close / stop) and `light` for the opener's bulb                                                                                               |
+| Water Controller / Hose Control (`water-controller`) | One `switch` per paired hose unit                                                                                                                             |
+| Dehumidifier (`dehum`)                               | `humidifier`, `number` (target humidity), `sensor` (indoor humidity), `select` (mode, fan speed), and `binary_sensor` (water bucket full, filter clean alarm) |
 
 Other Noma IQ devices are not implemented yet — open an issue with the device's `oem_model_number` and property dump if you want one added.
 
@@ -58,3 +59,8 @@ Entities for each device on the account are created automatically. For the Water
 ## Contributions
 
 Contributions are welcome — please open an issue first for non-trivial changes. The lint and validate workflows must pass on PRs.
+
+## Credits
+
+- Originally forked from [mnfjorge/hacs-nomaiq](https://github.com/mnfjorge/hacs-nomaiq).
+- Dehumidifier support adapted from [gravyflex/noma-iq-homeassistant](https://github.com/gravyflex/noma-iq-homeassistant) (NOMA iQ dehumidifier property mapping and entity layout).

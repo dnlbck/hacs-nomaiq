@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/mnfjorge/hacs-nomaiq/issues",
   "loggers": ["ayla_iot_unofficial"],
   "requirements": ["ayla_iot_unofficial==1.5.0"],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
