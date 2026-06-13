@@ -7,15 +7,31 @@ from typing import Any
 
 import ayla_iot_unofficial
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN
+from .const import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    CONF_AI_TASK_ENTITY_ID,
+    CONF_ENABLE_PROPERTY_DUMP,
+    CONF_FORCE_LLM_MODELS,
+    CONF_OFFER_ADOPTION,
+    DEFAULT_ENABLE_PROPERTY_DUMP,
+    DEFAULT_OFFER_ADOPTION,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +39,19 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_AI_TASK_ENTITY_ID): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain="ai_task")
+        ),
+        vol.Optional(CONF_OFFER_ADOPTION, default=DEFAULT_OFFER_ADOPTION): bool,
+        vol.Optional(
+            CONF_ENABLE_PROPERTY_DUMP, default=DEFAULT_ENABLE_PROPERTY_DUMP
+        ): bool,
+        vol.Optional(CONF_FORCE_LLM_MODELS, default=""): str,
     }
 )
 
@@ -47,6 +76,12 @@ class NomaIQConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> NomaIQOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return NomaIQOptionsFlowHandler(config_entry)
+
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
@@ -56,10 +91,10 @@ class NomaIQConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
             try:
                 await validate_input(self.hass, user_input)
-            except ayla_iot_unofficial.AylaApiError:
-                errors["base"] = "cannot_connect"
             except ayla_iot_unofficial.AylaAuthError:
                 errors["base"] = "invalid_auth"
+            except ayla_iot_unofficial.AylaError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -75,10 +110,10 @@ class NomaIQConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-            except ayla_iot_unofficial.AylaApiError:
-                errors["base"] = "cannot_connect"
             except ayla_iot_unofficial.AylaAuthError:
                 errors["base"] = "invalid_auth"
+            except ayla_iot_unofficial.AylaError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -96,4 +131,29 @@ class NomaIQConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, entry.data),
             errors=errors,
             description_placeholders={"username": entry.data[CONF_USERNAME]},
+        )
+
+
+class NomaIQOptionsFlowHandler(OptionsFlow):
+    """Options for LLM classification of unsupported devices."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Store the entry privately (self.config_entry is deprecated)."""
+        self._entry = entry
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            # Merge over existing options: setup reads username/password from
+            # options as a credentials fallback, so they must survive saves.
+            merged = {**self._entry.options, **user_input}
+            if not user_input.get(CONF_AI_TASK_ENTITY_ID):
+                merged.pop(CONF_AI_TASK_ENTITY_ID, None)
+            return self.async_create_entry(title="", data=merged)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, dict(self._entry.options)
+            ),
         )

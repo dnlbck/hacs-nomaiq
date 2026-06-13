@@ -52,10 +52,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Noma IQ Select platform."""
     coordinator: NomaIQDataUpdateCoordinator = entry.runtime_data
+    manager = coordinator.adoption
 
     entities: list[SelectEntity] = []
     for device in coordinator.data:
-        if device.oem_model_number != "dehum":
+        if device.oem_model_number != "dehum" or (
+            manager and manager.is_forced(device.oem_model_number)
+        ):
             continue
         for spec in DEHUM_SELECTS:
             if spec.property_name in device.properties_full:

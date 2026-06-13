@@ -9,13 +9,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NomaIQConfigEntry
 from .coordinator import NomaIQDataUpdateCoordinator
 from .entity import NomaIQEntity
+from .factory import async_setup_mapped_platform
 
 
 async def async_setup_entry(
@@ -25,13 +26,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Noma IQ Sensor platform."""
     coordinator: NomaIQDataUpdateCoordinator = entry.runtime_data
+    manager = coordinator.adoption
 
     entities: list[SensorEntity] = []
     for device in coordinator.data:
-        if device.oem_model_number == "dehum" and "indoor_humidity" in device.properties_full:
+        if (
+            device.oem_model_number == "dehum"
+            and not (manager and manager.is_forced(device.oem_model_number))
+            and "indoor_humidity" in device.properties_full
+        ):
             entities.append(NomaIQIndoorHumiditySensor(coordinator, device))
 
     async_add_entities(entities, update_before_add=False)
+    async_setup_mapped_platform(hass, entry, async_add_entities, Platform.SENSOR)
 
 
 class NomaIQIndoorHumiditySensor(NomaIQEntity, SensorEntity):

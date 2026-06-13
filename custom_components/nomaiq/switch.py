@@ -7,12 +7,14 @@ from typing import Any
 import ayla_iot_unofficial
 import ayla_iot_unofficial.device
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NomaIQConfigEntry
 from .coordinator import NomaIQDataUpdateCoordinator
 from .entity import NomaIQEntity
+from .factory import async_setup_mapped_platform
 
 HOSE_CONTROLLER_UNITS = (1, 2, 3, 4)
 
@@ -24,15 +26,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Noma IQ Switch platform."""
     coordinator: NomaIQDataUpdateCoordinator = entry.runtime_data
+    manager = coordinator.adoption
 
     entities: list[SwitchEntity] = []
     for device in coordinator.data:
-        if device.oem_model_number == "water-controller":
+        if device.oem_model_number == "water-controller" and not (
+            manager and manager.is_forced(device.oem_model_number)
+        ):
             for unit in HOSE_CONTROLLER_UNITS:
                 if device.get_property_value(f"Unit{unit}_Pairing_Status"):
                     entities.append(NomaIQHoseControlSwitch(coordinator, device, unit))
 
     async_add_entities(entities, update_before_add=False)
+    async_setup_mapped_platform(hass, entry, async_add_entities, Platform.SWITCH)
 
 
 class NomaIQHoseControlSwitch(NomaIQEntity, SwitchEntity):

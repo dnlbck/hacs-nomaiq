@@ -1,0 +1,7 @@
+unadopt_device:
+  fields:
+    oem_model:
+      required: true
+      example: water-controller
+      selector:
+        text:

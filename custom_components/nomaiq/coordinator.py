@@ -1,12 +1,18 @@
 """Coordinator for nomaiq."""
 
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 import ayla_iot_unofficial
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, NORMAL_UPDATE_INTERVAL, TRANSITION_UPDATE_INTERVAL
+
+if TYPE_CHECKING:
+    from .adoption import AdoptionManager
 
 
 class NomaIQDataUpdateCoordinator(DataUpdateCoordinator[list[ayla_iot_unofficial.device.Device]]):
@@ -23,6 +29,7 @@ class NomaIQDataUpdateCoordinator(DataUpdateCoordinator[list[ayla_iot_unofficial
         self._api = api
         self._devices_in_transition: set[str] = set()  # Track devices opening/closing
         self._last_full_update = 0  # Track when we last did a full update
+        self.adoption: AdoptionManager | None = None  # set in async_setup_entry
 
         super().__init__(
             hass,
@@ -58,6 +65,10 @@ class NomaIQDataUpdateCoordinator(DataUpdateCoordinator[list[ayla_iot_unofficial
     def is_device_in_transition(self, device_serial: str) -> bool:
         """Check if a device is currently in transition state."""
         return device_serial in self._devices_in_transition
+
+    def get_device(self, serial: str) -> ayla_iot_unofficial.device.Device | None:
+        """Return the device with the given serial from the latest snapshot."""
+        return next((d for d in (self.data or []) if d.serial_number == serial), None)
 
     async def _async_update_data(self) -> list[ayla_iot_unofficial.device.Device]:
         """Fetch data."""

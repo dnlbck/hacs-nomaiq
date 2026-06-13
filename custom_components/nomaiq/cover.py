@@ -12,12 +12,14 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NomaIQConfigEntry
 from .coordinator import NomaIQDataUpdateCoordinator
 from .entity import NomaIQEntity
+from .factory import async_setup_mapped_platform
 
 
 async def async_setup_entry(
@@ -27,13 +29,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Noma IQ Cover platform."""
     coordinator: NomaIQDataUpdateCoordinator = entry.runtime_data
+    manager = coordinator.adoption
 
     for device in coordinator.data:
-        if device.oem_model_number == "gdo":
+        if device.oem_model_number == "gdo" and not (
+            manager and manager.is_forced(device.oem_model_number)
+        ):
             async_add_entities(
                 [NomaIQGarageDoorOpenerEntity(coordinator, device)],
                 update_before_add=False,
             )
+
+    async_setup_mapped_platform(hass, entry, async_add_entities, Platform.COVER)
 
 
 class NomaIQGarageDoorOpenerEntity(NomaIQEntity, CoverEntity):

@@ -7,12 +7,15 @@ from typing import Any
 import ayla_iot_unofficial
 import ayla_iot_unofficial.device
 from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NomaIQConfigEntry
+from .const import NATIVE_MODELS
 from .coordinator import NomaIQDataUpdateCoordinator
 from .entity import NomaIQEntity
+from .factory import async_setup_mapped_platform
 
 
 async def async_setup_entry(
@@ -22,10 +25,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Noma IQ Light platform."""
     coordinator: NomaIQDataUpdateCoordinator = entry.runtime_data
+    manager = coordinator.adoption
 
     for device in coordinator.data:
-        if "light_control" in device.properties_full and "light_name" in device.properties_full:
+        # Only natively-supported models get the hand-written light; unknown
+        # models with light properties go through the mapping path instead.
+        if (
+            device.oem_model_number in NATIVE_MODELS
+            and not (manager and manager.is_forced(device.oem_model_number))
+            and "light_control" in device.properties_full
+            and "light_name" in device.properties_full
+        ):
             async_add_entities([NomaIQLightEntity(coordinator, device)], update_before_add=False)
+
+    async_setup_mapped_platform(hass, entry, async_add_entities, Platform.LIGHT)
 
 
 class NomaIQLightEntity(NomaIQEntity, LightEntity):

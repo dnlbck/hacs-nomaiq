@@ -5,13 +5,14 @@ from __future__ import annotations
 import ayla_iot_unofficial
 import ayla_iot_unofficial.device
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NomaIQConfigEntry
 from .coordinator import NomaIQDataUpdateCoordinator
 from .entity import NomaIQEntity
+from .factory import async_setup_mapped_platform
 
 
 async def async_setup_entry(
@@ -21,13 +22,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Noma IQ Number platform."""
     coordinator: NomaIQDataUpdateCoordinator = entry.runtime_data
+    manager = coordinator.adoption
 
     entities: list[NumberEntity] = []
     for device in coordinator.data:
-        if device.oem_model_number == "dehum" and "humidity" in device.properties_full:
+        if (
+            device.oem_model_number == "dehum"
+            and not (manager and manager.is_forced(device.oem_model_number))
+            and "humidity" in device.properties_full
+        ):
             entities.append(NomaIQTargetHumidityNumber(coordinator, device))
 
     async_add_entities(entities, update_before_add=False)
+    async_setup_mapped_platform(hass, entry, async_add_entities, Platform.NUMBER)
 
 
 class NomaIQTargetHumidityNumber(NomaIQEntity, NumberEntity):

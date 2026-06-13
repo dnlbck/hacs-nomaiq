@@ -10,12 +10,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NomaIQConfigEntry
 from .coordinator import NomaIQDataUpdateCoordinator
 from .entity import NomaIQEntity
+from .factory import async_setup_mapped_platform
 
 
 @dataclass(frozen=True)
@@ -51,16 +53,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Noma IQ Binary Sensor platform."""
     coordinator: NomaIQDataUpdateCoordinator = entry.runtime_data
+    manager = coordinator.adoption
 
     entities: list[BinarySensorEntity] = []
     for device in coordinator.data:
-        if device.oem_model_number != "dehum":
+        if device.oem_model_number != "dehum" or (
+            manager and manager.is_forced(device.oem_model_number)
+        ):
             continue
         for spec in DEHUM_BINARY_SENSORS:
             if spec.property_name in device.properties_full:
                 entities.append(NomaIQDehumBinarySensor(coordinator, device, spec))
 
     async_add_entities(entities, update_before_add=False)
+    async_setup_mapped_platform(hass, entry, async_add_entities, Platform.BINARY_SENSOR)
 
 
 class NomaIQDehumBinarySensor(NomaIQEntity, BinarySensorEntity):

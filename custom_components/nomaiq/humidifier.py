@@ -22,10 +22,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Noma IQ Humidifier platform."""
     coordinator: NomaIQDataUpdateCoordinator = entry.runtime_data
+    manager = coordinator.adoption
 
     entities: list[HumidifierEntity] = []
     for device in coordinator.data:
-        if device.oem_model_number == "dehum" and "power" in device.properties_full:
+        if (
+            device.oem_model_number == "dehum"
+            and not (manager and manager.is_forced(device.oem_model_number))
+            and "power" in device.properties_full
+        ):
             entities.append(NomaIQDehumidifierEntity(coordinator, device))
 
     async_add_entities(entities, update_before_add=False)
