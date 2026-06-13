@@ -87,7 +87,7 @@ class EntityMapping:
     command_value: str | None = None
 
     @classmethod
-    def from_dict(cls, data: EntityMappingDict) -> "EntityMapping":
+    def from_dict(cls, data: EntityMappingDict) -> EntityMapping:
         return cls(
             kind=data["kind"],
             id_suffix=data.get("id_suffix"),
@@ -115,7 +115,7 @@ class Fanout:
     name_fallback: str | None = None
 
     @classmethod
-    def from_dict(cls, data: FanoutDict) -> "Fanout":
+    def from_dict(cls, data: FanoutDict) -> Fanout:
         return cls(
             range=tuple(data.get("range", ())),
             gate_property=data.get("gate_property"),

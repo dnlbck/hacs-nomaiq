@@ -7,6 +7,7 @@ module so the factory can map kind -> class without circular imports.
 
 from __future__ import annotations
 
+import contextlib
 import time
 from typing import Any
 
@@ -47,7 +48,7 @@ def format_template(template: str | None, ctx: dict[str, Any]) -> str | None:
         return None
     try:
         return template.format_map(_SafeDict(ctx))
-    except Exception:  # noqa: BLE001 - malformed format spec from the LLM
+    except Exception:
         return template
 
 
@@ -131,10 +132,8 @@ class MappingSensor(MappingEntityBase, SensorEntity):
         super().__init__(*args, **kwargs)
         spec = self._spec
         if spec.device_class:
-            try:
+            with contextlib.suppress(ValueError):
                 self._attr_device_class = SensorDeviceClass(spec.device_class)
-            except ValueError:
-                pass
         if spec.unit_of_measurement:
             self._attr_native_unit_of_measurement = spec.unit_of_measurement
 
@@ -156,10 +155,8 @@ class MappingBinarySensor(MappingEntityBase, BinarySensorEntity):
         super().__init__(*args, **kwargs)
         spec = self._spec
         if spec.device_class:
-            try:
+            with contextlib.suppress(ValueError):
                 self._attr_device_class = BinarySensorDeviceClass(spec.device_class)
-            except ValueError:
-                pass
 
     @property
     def is_on(self) -> bool | None:

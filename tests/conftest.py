@@ -12,7 +12,6 @@ import enum
 import sys
 import types
 from pathlib import Path
-from typing import Generic, TypeVar
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -21,7 +20,6 @@ if str(ROOT) not in sys.path:
 try:
     import homeassistant  # noqa: F401
 except ImportError:
-    T = TypeVar("T")
 
     def _module(name: str) -> types.ModuleType:
         mod = types.ModuleType(name)
@@ -32,7 +30,7 @@ except ImportError:
 
     core = _module("homeassistant.core")
 
-    class HomeAssistant:  # noqa: D401
+    class HomeAssistant:
         pass
 
     class Context:
@@ -107,7 +105,7 @@ except ImportError:
 
     update_coordinator = _module("homeassistant.helpers.update_coordinator")
 
-    class DataUpdateCoordinator(Generic[T]):
+    class DataUpdateCoordinator[T]:
         def __init__(self, hass, logger, name=None, update_interval=None, update_method=None):
             self.hass = hass
             self.logger = logger
@@ -121,7 +119,7 @@ except ImportError:
 
     storage = _module("homeassistant.helpers.storage")
 
-    class Store(Generic[T]):
+    class Store[T]:
         def __init__(self, hass, version, key):
             self.version = version
             self.key = key

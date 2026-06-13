@@ -207,7 +207,7 @@ def _format_n(template: str, n: int) -> str | None:
     """Format a {n} template defensively; None when the template is malformed."""
     try:
         return template.replace("{n}", str(n))
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
 
@@ -413,7 +413,7 @@ async def _generate_data(
         ) from err
     except asyncio.CancelledError:
         raise
-    except Exception as err:  # noqa: BLE001 - provider backends raise all sorts
+    except Exception as err:
         raise LLMClassificationError(f"AI task failed: {err}") from err
     return result.data
 

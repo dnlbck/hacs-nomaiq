@@ -78,7 +78,7 @@ class AdoptDeviceRepairFlow(RepairsFlow):
             _, manager, _ = self._resolve_context()
             if manager is not None:
                 manager.release_model(self._model)
-        except Exception:  # noqa: BLE001 - releasing best-effort during teardown
+        except Exception:
             _LOGGER.debug("Could not release adoption lock for %s", self._model)
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -155,7 +155,7 @@ class AdoptDeviceRepairFlow(RepairsFlow):
                 self._mapping = self._task.result()
             except asyncio.CancelledError:
                 raise
-            except Exception as err:  # noqa: BLE001 - surface anything to the user
+            except Exception as err:
                 self._error = str(err) or type(err).__name__
             finally:
                 self._task = None
