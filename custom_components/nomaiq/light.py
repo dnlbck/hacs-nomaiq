@@ -34,7 +34,6 @@ async def async_setup_entry(
             device.oem_model_number in NATIVE_MODELS
             and not (manager and manager.is_forced(device.oem_model_number))
             and "light_control" in device.properties_full
-            and "light_name" in device.properties_full
         ):
             async_add_entities([NomaIQLightEntity(coordinator, device)], update_before_add=False)
 
