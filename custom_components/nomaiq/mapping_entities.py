@@ -222,6 +222,12 @@ class MappingNumber(MappingEntityBase, NumberEntity):
         super().__init__(*args, **kwargs)
         if self._spec.unit_of_measurement:
             self._attr_native_unit_of_measurement = self._spec.unit_of_measurement
+        if self._spec.min_value is not None:
+            self._attr_native_min_value = self._spec.min_value
+        if self._spec.max_value is not None:
+            self._attr_native_max_value = self._spec.max_value
+        if self._spec.step is not None:
+            self._attr_native_step = self._spec.step
 
     @property
     def native_value(self) -> float | None:

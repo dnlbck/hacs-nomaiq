@@ -252,3 +252,37 @@ def test_sanitize_rejects_schema_violation():
     # switch without command_property fails validate_mapping
     with pytest.raises(LLMClassificationError):
         sanitize_mapping(raw, _water_properties())
+
+
+def _number_entity(**range_fields):
+    return {
+        "kind": "number",
+        "state_property": "Unit1_Manual_Switch",
+        "command_property": "Unit1_Manual_Switch",
+        **range_fields,
+    }
+
+
+def test_sanitize_keeps_valid_number_range():
+    raw = {"entities": [_number_entity(min_value=0, max_value=240, step=5)]}
+    mapping = sanitize_mapping(raw, _water_properties())
+    entity = mapping["entities"][0]
+    assert entity["min_value"] == 0
+    assert entity["max_value"] == 240
+    assert entity["step"] == 5
+
+
+def test_sanitize_strips_inverted_number_range():
+    raw = {"entities": [_number_entity(min_value=100, max_value=0)]}
+    mapping = sanitize_mapping(raw, _water_properties())
+    entity = mapping["entities"][0]
+    assert "min_value" not in entity
+    assert "max_value" not in entity
+
+
+def test_sanitize_strips_nonpositive_step():
+    raw = {"entities": [_number_entity(min_value=0, max_value=100, step=-1)]}
+    mapping = sanitize_mapping(raw, _water_properties())
+    entity = mapping["entities"][0]
+    assert "step" not in entity
+    assert "min_value" not in entity  # whole triple stripped together

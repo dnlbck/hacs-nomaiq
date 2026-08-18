@@ -67,5 +67,29 @@ def test_sensor_only_mapping_is_valid():
     assert validate_mapping({"entities": [{"kind": "sensor", "state_property": "rssi"}]})
 
 
+def test_number_range_fields_are_valid():
+    assert validate_mapping(
+        {
+            "entities": [
+                {
+                    "kind": "number",
+                    "state_property": "s",
+                    "command_property": "c",
+                    "min_value": 30,
+                    "max_value": 80.5,
+                    "step": 1,
+                }
+            ]
+        }
+    )
+
+
+def test_non_numeric_range_fields_are_invalid():
+    base = {"kind": "number", "state_property": "s", "command_property": "c"}
+    assert not validate_mapping({"entities": [{**base, "min_value": "30"}]})
+    assert not validate_mapping({"entities": [{**base, "max_value": "80"}]})
+    assert not validate_mapping({"entities": [{**base, "step": True}]})
+
+
 def test_non_dict_is_invalid():
     assert not validate_mapping(["not", "a", "mapping"])

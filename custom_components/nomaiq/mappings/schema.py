@@ -39,6 +39,9 @@ class EntityMappingDict(TypedDict, total=False):
     entity_category: str
     supported_features: list[str]
     command_value: str
+    min_value: float
+    max_value: float
+    step: float
 
 
 class FanoutDict(TypedDict, total=False):
@@ -85,6 +88,9 @@ class EntityMapping:
     entity_category: str | None = None
     supported_features: tuple[str, ...] = ()
     command_value: str | None = None
+    min_value: float | None = None
+    max_value: float | None = None
+    step: float | None = None
 
     @classmethod
     def from_dict(cls, data: EntityMappingDict) -> EntityMapping:
@@ -104,6 +110,9 @@ class EntityMapping:
             entity_category=data.get("entity_category"),
             supported_features=tuple(data.get("supported_features", ())),
             command_value=data.get("command_value"),
+            min_value=data.get("min_value"),
+            max_value=data.get("max_value"),
+            step=data.get("step"),
         )
 
 
@@ -162,6 +171,12 @@ def validate_mapping(data: Any) -> bool:
         command_value = entity.get("command_value")
         if command_value is not None and command_value not in VALID_COMMAND_VALUES:
             return False
+        for range_field in ("min_value", "max_value", "step"):
+            field_value = entity.get(range_field)
+            if field_value is not None and (
+                isinstance(field_value, bool) or not isinstance(field_value, (int, float))
+            ):
+                return False
         if kind in {"switch", "light", "binary_sensor"} and state_prop is None:
             return False
         if kind in {"switch", "light"} and command_prop is None:

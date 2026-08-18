@@ -82,6 +82,9 @@ Respond with a JSON object of this shape (omit any field you don't need):
       "name_fallback": "<optional>",
       "device_class": "<optional HA device class>",
       "unit_of_measurement": "<optional>",
+      "min_value": "<optional number, kind=number only>",
+      "max_value": "<optional number, kind=number only>",
+      "step": "<optional number, kind=number only>",
       "entity_category": "diagnostic"
     }
   ]
@@ -102,7 +105,11 @@ RULES:
    registers) or include them with "entity_category": "diagnostic".
 8. "command_value": "timestamp" is ONLY for cover-style toggle commands that expect a
    unix-timestamp string write.
-9. Allowed kinds are exactly the six listed. Never output select, climate, fan, or valve.
+9. For kind "number", set min_value/max_value/step when a plausible range is inferable
+   from the property name, unit, or current value (e.g. a humidity % setpoint -> 30-80,
+   step 1). Omit them when unknown, and never output a range that excludes the
+   property's current value.
+10. Allowed kinds are exactly the six listed. Never output select, climate, fan, or valve.
 
 EXAMPLE for a different device (model "sprinkler-x" with properties: Zone1_Installed RO
 boolean, Zone1_Run RW integer, Zone1_Run_Status RO boolean, Zone1_Label RO string, and
@@ -216,6 +223,20 @@ def _property_writable(properties_full: dict[str, Any], name: str) -> bool:
     return isinstance(meta, dict) and not meta.get("read_only")
 
 
+def _strip_invalid_number_range(entity: dict[str, Any]) -> dict[str, Any]:
+    """Drop an invalid min/max/step triple from a number entity, keeping the entity."""
+    min_value = entity.get("min_value")
+    max_value = entity.get("max_value")
+    step = entity.get("step")
+    invalid = (min_value is not None and max_value is not None and min_value >= max_value) or (
+        step is not None and step <= 0
+    )
+    if not invalid:
+        return entity
+    _LOGGER.debug("Dropping invalid number range on entity %r", entity.get("id_suffix"))
+    return {k: v for k, v in entity.items() if k not in ("min_value", "max_value", "step")}
+
+
 def sanitize_mapping(raw: dict[str, Any], properties_full: dict[str, Any]) -> ModelMappingDict:
     """Validate AI output against the device's real properties.
 
@@ -313,6 +334,8 @@ def sanitize_mapping(raw: dict[str, Any], properties_full: dict[str, Any]) -> Mo
 
     kept: list[dict[str, Any]] = []
     for entity in entities:
+        if entity.get("kind") == "number":
+            entity = _strip_invalid_number_range(entity)
         state_prop, command_prop = _spec_props(entity)
         if _is_fanout_entity(entity):
             if fanout_range:
