@@ -17,7 +17,6 @@ NATIVE_MODELS: frozenset[str] = frozenset({"gdo", "water-controller", "dehum"})
 # Persistent mapping store (homeassistant.helpers.storage.Store)
 STORAGE_KEY = "nomaiq_mappings"
 STORAGE_VERSION = 1
-LLM_NEGATIVE_CACHE_SECONDS = 7 * 24 * 60 * 60  # store bookkeeping only; gates nothing
 
 # AI Task adoption
 AI_TASK_TIMEOUT_SECONDS = 120

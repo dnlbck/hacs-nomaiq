@@ -286,15 +286,8 @@ class AdoptionManager:
             raise llm_client.LLMClassificationError(
                 "no AI Task entity configured for NomaIQ (set one in the integration's options)"
             )
-        try:
-            mapping = await llm_client.async_classify_device(self.hass, device, entity_id)
-        except llm_client.LLMClassificationError:
-            # Bookkeeping only; nothing reads this as a gate anymore.
-            await self.store.record_llm_attempt(device.oem_model_number, "failed")
-            raise
-        return dict(mapping)
+        return dict(await llm_client.async_classify_device(self.hass, device, entity_id))
 
     async def async_apply_mapping(self, model: str, mapping: dict[str, Any]) -> None:
         """Persist an approved mapping; caller schedules the entry reload."""
         await self.store.set_mapping(model, mapping)  # type: ignore[arg-type]
-        await self.store.record_llm_attempt(model, "ok")
