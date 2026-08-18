@@ -107,9 +107,7 @@ def build_entities(
                     gate = format_template(fanout.gate_property, {"n": n})
                     if not gate or not bool(device.get_property_value(gate)):
                         continue
-                entities.append(
-                    entity_class(coordinator, device, spec, {"n": n})
-                )
+                entities.append(entity_class(coordinator, device, spec, {"n": n}))
         else:
             entities.append(entity_class(coordinator, device, spec))
 

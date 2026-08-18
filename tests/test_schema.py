@@ -29,15 +29,11 @@ def test_golden_water_controller_mapping_is_valid():
 
 
 def test_switch_without_command_property_is_invalid():
-    assert not validate_mapping(
-        {"entities": [{"kind": "switch", "state_property": "x"}]}
-    )
+    assert not validate_mapping({"entities": [{"kind": "switch", "state_property": "x"}]})
 
 
 def test_switch_without_state_property_is_invalid():
-    assert not validate_mapping(
-        {"entities": [{"kind": "switch", "command_property": "x"}]}
-    )
+    assert not validate_mapping({"entities": [{"kind": "switch", "command_property": "x"}]})
 
 
 def test_unknown_kind_is_invalid():
@@ -64,9 +60,7 @@ def test_cover_requires_state_and_command():
 
 
 def test_non_integer_fanout_range_is_invalid():
-    assert not validate_mapping(
-        {"entities": [], "fanout": {"range": ["1", "2"]}}
-    )
+    assert not validate_mapping({"entities": [], "fanout": {"range": ["1", "2"]}})
 
 
 def test_sensor_only_mapping_is_valid():

@@ -23,9 +23,7 @@ from .factory import async_setup_mapped_platform
 HOSE_CONTROLLER_UNITS = (1, 2, 3, 4)
 
 
-def _hose_unit_name(
-    device: ayla_iot_unofficial.device.Device, unit: int
-) -> str:
+def _hose_unit_name(device: ayla_iot_unofficial.device.Device, unit: int) -> str:
     """Return the controller-configured name for a hose unit, with a fallback."""
     name = device.get_property_value(f"Unit{unit}_Device_Name")
     return name or f"{device.name} Unit {unit}"
@@ -92,9 +90,7 @@ async def async_setup_entry(
                     continue
                 for spec in HOSE_SENSORS:
                     if f"Unit{unit}_{spec.prop_base}" in device.properties_full:
-                        entities.append(
-                            NomaIQHoseSensor(coordinator, device, unit, spec)
-                        )
+                        entities.append(NomaIQHoseSensor(coordinator, device, unit, spec))
 
     async_add_entities(entities, update_before_add=False)
     async_setup_mapped_platform(hass, entry, async_add_entities, Platform.SENSOR)
@@ -143,9 +139,7 @@ class NomaIQHoseSensor(NomaIQEntity, SensorEntity):
         self._spec = spec
         self._prop = f"Unit{unit}_{spec.prop_base}"
         self._attr_name = f"{_hose_unit_name(device, unit)} {spec.name}"
-        self._attr_unique_id = (
-            f"nomaiq_hose_{device.serial_number}_unit{unit}_{spec.suffix}"
-        )
+        self._attr_unique_id = f"nomaiq_hose_{device.serial_number}_unit{unit}_{spec.suffix}"
         self._attr_state_class = spec.state_class
         if spec.entity_category is not None:
             self._attr_entity_category = spec.entity_category

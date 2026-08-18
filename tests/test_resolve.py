@@ -46,9 +46,7 @@ def test_resolve_ignores_invalid_stored_mapping():
 
 
 def test_resolve_applies_promotions():
-    promotions = {
-        "pump_state": {"kind": "switch", "command_property": "pump_cmd", "on_value": 1}
-    }
+    promotions = {"pump_state": {"kind": "switch", "command_property": "pump_cmd", "on_value": 1}}
     resolved = resolve("mystery", {}, FakeStore(promotions=promotions), EMPTY_BUNDLED)
     assert resolved.sources == ["promotion"]
     assert len(resolved.entities) == 1

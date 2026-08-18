@@ -242,9 +242,7 @@ class MappingCover(MappingEntityBase, CoverEntity):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-        )
+        self._attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         if self._spec.command_value == "timestamp":
             # Toggle-style covers (like the native GDO) also support STOP.
             self._attr_supported_features |= CoverEntityFeature.STOP

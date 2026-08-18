@@ -48,9 +48,7 @@ OPTIONS_SCHEMA = vol.Schema(
             selector.EntitySelectorConfig(domain="ai_task")
         ),
         vol.Optional(CONF_OFFER_ADOPTION, default=DEFAULT_OFFER_ADOPTION): bool,
-        vol.Optional(
-            CONF_ENABLE_PROPERTY_DUMP, default=DEFAULT_ENABLE_PROPERTY_DUMP
-        ): bool,
+        vol.Optional(CONF_ENABLE_PROPERTY_DUMP, default=DEFAULT_ENABLE_PROPERTY_DUMP): bool,
         vol.Optional(CONF_FORCE_LLM_MODELS, default=""): str,
     }
 )

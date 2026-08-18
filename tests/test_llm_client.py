@@ -104,16 +104,13 @@ def test_property_table_truncates_long_values():
 
 
 def test_property_table_skips_file_properties():
-    table = build_property_table(
-        {"fw": {"base_type": "file", "read_only": True, "value": "data"}}
-    )
+    table = build_property_table({"fw": {"base_type": "file", "read_only": True, "value": "data"}})
     assert "fw" not in table
 
 
 def test_property_table_caps_rows():
     props = {
-        f"prop_{i:03d}": {"base_type": "integer", "read_only": True, "value": i}
-        for i in range(10)
+        f"prop_{i:03d}": {"base_type": "integer", "read_only": True, "value": i} for i in range(10)
     }
     table = build_property_table(props, max_rows=3)
     assert "7 more properties omitted" in table

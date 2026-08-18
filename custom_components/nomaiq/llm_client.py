@@ -173,9 +173,7 @@ def coerce_ai_task_result(data: Any) -> dict[str, Any]:
         return data
     if isinstance(data, str):
         return extract_json_object(data)
-    raise LLMClassificationError(
-        f"AI task returned unsupported data type {type(data).__name__}"
-    )
+    raise LLMClassificationError(f"AI task returned unsupported data type {type(data).__name__}")
 
 
 _KIND_ORDER = ("switch", "light", "cover", "number", "binary_sensor", "sensor")
@@ -184,9 +182,7 @@ _KIND_ORDER = ("switch", "light", "cover", "number", "binary_sensor", "sensor")
 def summarize_mapping(mapping: dict[str, Any]) -> str:
     """Human one-liner for the preview step: '1 switch, 2 numbers, 9 sensors'."""
     counts = Counter(
-        entity.get("kind")
-        for entity in mapping.get("entities", [])
-        if isinstance(entity, dict)
+        entity.get("kind") for entity in mapping.get("entities", []) if isinstance(entity, dict)
     )
     parts: list[str] = []
     for kind in _KIND_ORDER:
@@ -220,9 +216,7 @@ def _property_writable(properties_full: dict[str, Any], name: str) -> bool:
     return isinstance(meta, dict) and not meta.get("read_only")
 
 
-def sanitize_mapping(
-    raw: dict[str, Any], properties_full: dict[str, Any]
-) -> ModelMappingDict:
+def sanitize_mapping(raw: dict[str, Any], properties_full: dict[str, Any]) -> ModelMappingDict:
     """Validate AI output against the device's real properties.
 
     Drops entities referencing nonexistent properties, requires command
@@ -295,9 +289,7 @@ def sanitize_mapping(
             if ok:
                 valid_ns.append(n)
         if not valid_ns:
-            errors.append(
-                "no fanout unit has all referenced properties present and writable"
-            )
+            errors.append("no fanout unit has all referenced properties present and writable")
         elif valid_ns != fanout_range:
             _LOGGER.debug("Shrinking fanout range %s -> %s", fanout_range, valid_ns)
         fanout_range = valid_ns
@@ -312,8 +304,7 @@ def sanitize_mapping(
                 fanout.pop("gate_property", None)
             name_prop = fanout.get("name_property")
             if name_prop and not any(
-                _property_exists(properties_full, _format_n(name_prop, n))
-                for n in valid_ns
+                _property_exists(properties_full, _format_n(name_prop, n)) for n in valid_ns
             ):
                 fanout.pop("name_property", None)
             mapping["fanout"] = fanout
@@ -372,16 +363,14 @@ def _ai_task_structure() -> dict[str, Any]:
         },
         "fanout": {
             "description": (
-                "Fanout block for repeating Unit{n}_ style properties; omit "
-                "when nothing repeats"
+                "Fanout block for repeating Unit{n}_ style properties; omit when nothing repeats"
             ),
             "required": False,
             "selector": selector.ObjectSelector(selector.ObjectSelectorConfig()),
         },
         "entities": {
             "description": (
-                "List of entity definition objects per the contract in the "
-                "instructions"
+                "List of entity definition objects per the contract in the instructions"
             ),
             "required": True,
             "selector": selector.ObjectSelector(selector.ObjectSelectorConfig()),
@@ -408,9 +397,7 @@ async def _generate_data(
                 structure=_ai_task_structure(),
             )
     except TimeoutError as err:
-        raise LLMClassificationError(
-            f"AI task timed out after {AI_TASK_TIMEOUT_SECONDS}s"
-        ) from err
+        raise LLMClassificationError(f"AI task timed out after {AI_TASK_TIMEOUT_SECONDS}s") from err
     except asyncio.CancelledError:
         raise
     except Exception as err:
@@ -451,6 +438,4 @@ async def async_classify_device(
             len(mapping.get("entities", [])),
         )
         return mapping
-    raise LLMClassificationError(
-        f"could not classify {device.oem_model_number}: {last_error}"
-    )
+    raise LLMClassificationError(f"could not classify {device.oem_model_number}: {last_error}")

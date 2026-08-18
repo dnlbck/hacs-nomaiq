@@ -177,8 +177,6 @@ def validate_mapping(data: Any) -> bool:
         if not isinstance(fanout, dict):
             return False
         rng = fanout.get("range")
-        if rng is not None and not (
-            isinstance(rng, list) and all(isinstance(n, int) for n in rng)
-        ):
+        if rng is not None and not (isinstance(rng, list) and all(isinstance(n, int) for n in rng)):
             return False
     return True

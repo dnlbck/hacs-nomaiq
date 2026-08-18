@@ -100,9 +100,7 @@ def resolve(
         display_name = bundled_model.get("display_name")
         if bundled_model.get("fanout"):
             fanout = Fanout.from_dict(bundled_model["fanout"])
-        entities.extend(
-            EntityMapping.from_dict(e) for e in bundled_model.get("entities", [])
-        )
+        entities.extend(EntityMapping.from_dict(e) for e in bundled_model.get("entities", []))
 
     user_model: ModelMappingDict | None = store.get_mapping(oem_model_number)
     if user_model and validate_mapping(user_model):
@@ -115,9 +113,7 @@ def resolve(
     for pattern in bundled.get("property_patterns", []):
         if _pattern_matches(pattern, properties_full):
             sources.append("pattern")
-            entities.extend(
-                EntityMapping.from_dict(e) for e in pattern.get("entities", [])
-            )
+            entities.extend(EntityMapping.from_dict(e) for e in pattern.get("entities", []))
 
     promotions = store.get_promotions(oem_model_number)
     if promotions:

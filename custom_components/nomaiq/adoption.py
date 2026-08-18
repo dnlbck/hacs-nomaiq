@@ -64,15 +64,11 @@ class AdoptionManager:
 
         options = entry.options
         self.ai_task_entity_id: str | None = options.get(CONF_AI_TASK_ENTITY_ID) or None
-        self.offers_enabled: bool = bool(
-            options.get(CONF_OFFER_ADOPTION, DEFAULT_OFFER_ADOPTION)
-        )
+        self.offers_enabled: bool = bool(options.get(CONF_OFFER_ADOPTION, DEFAULT_OFFER_ADOPTION))
         self.dump_enabled: bool = bool(
             options.get(CONF_ENABLE_PROPERTY_DUMP, DEFAULT_ENABLE_PROPERTY_DUMP)
         )
-        self.force_models: frozenset[str] = parse_force_models(
-            options.get(CONF_FORCE_LLM_MODELS)
-        )
+        self.force_models: frozenset[str] = parse_force_models(options.get(CONF_FORCE_LLM_MODELS))
 
         # Serial -> resolved mapping; platforms only see devices listed here.
         self.resolved: dict[str, ResolvedMapping] = {}
@@ -92,9 +88,7 @@ class AdoptionManager:
 
     def _model_needs_adoption(self, device: ayla_iot_unofficial.device.Device) -> bool:
         """True when no stored/bundled mapping yields entities for this model."""
-        bare = resolve(
-            device.oem_model_number, device.properties_full, self.store, self.bundled
-        )
+        bare = resolve(device.oem_model_number, device.properties_full, self.store, self.bundled)
         return not bare.entities
 
     # ---- deterministic triage ----------------------------------------------
@@ -189,9 +183,7 @@ class AdoptionManager:
                     claimed.add(template)
         return claimed
 
-    def _resolve_device(
-        self, device: ayla_iot_unofficial.device.Device
-    ) -> ResolvedMapping:
+    def _resolve_device(self, device: ayla_iot_unofficial.device.Device) -> ResolvedMapping:
         """Resolve the stored/bundled mapping and append dump sensors."""
         resolved = resolve(
             device.oem_model_number, device.properties_full, self.store, self.bundled
@@ -292,8 +284,7 @@ class AdoptionManager:
         entity_id = entity_id or self.ai_task_entity_id
         if not entity_id:
             raise llm_client.LLMClassificationError(
-                "no AI Task entity configured for NomaIQ (set one in the "
-                "integration's options)"
+                "no AI Task entity configured for NomaIQ (set one in the integration's options)"
             )
         try:
             mapping = await llm_client.async_classify_device(self.hass, device, entity_id)

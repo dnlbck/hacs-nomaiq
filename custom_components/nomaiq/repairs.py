@@ -61,11 +61,7 @@ class AdoptDeviceRepairFlow(RepairsFlow):
         coordinator = entry.runtime_data
         manager = coordinator.adoption
         device = coordinator.get_device(self._serial) or next(
-            (
-                d
-                for d in coordinator.data or []
-                if d.oem_model_number == self._model
-            ),
+            (d for d in coordinator.data or [] if d.oem_model_number == self._model),
             None,
         )
         return entry, manager, device
@@ -214,9 +210,7 @@ class AdoptDeviceRepairFlow(RepairsFlow):
                 options={**entry.options, CONF_AI_TASK_ENTITY_ID: self._entity_id},
             )
         else:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
+            self.hass.async_create_task(self.hass.config_entries.async_reload(entry.entry_id))
         return self.async_create_entry(title="", data={})
 
     async def async_step_discard(self, user_input: dict[str, Any] | None = None) -> FlowResult:
