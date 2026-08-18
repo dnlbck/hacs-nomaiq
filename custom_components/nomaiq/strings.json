@@ -70,7 +70,7 @@
           },
           "preview": {
             "title": "Proposed entities for {model}",
-            "description": "The AI proposes: **{summary}**\n\n```json\n{mapping_json}\n```\n\nApply to create these entities now, or discard to leave the device unadopted (you can adopt it later from Repairs).",
+            "description": "The AI proposes: **{summary}**\n\n```json\n{mapping_json}\n```\n\nApply to create these entities now, or discard to leave the device unadopted (you can adopt it later from Repairs).{dropped}",
             "menu_options": {
               "apply": "Apply and create entities",
               "discard": "Discard proposal"

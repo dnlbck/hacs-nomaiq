@@ -237,13 +237,17 @@ def _strip_invalid_number_range(entity: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in entity.items() if k not in ("min_value", "max_value", "step")}
 
 
-def sanitize_mapping(raw: dict[str, Any], properties_full: dict[str, Any]) -> ModelMappingDict:
+def sanitize_mapping(
+    raw: dict[str, Any], properties_full: dict[str, Any]
+) -> tuple[ModelMappingDict, list[str]]:
     """Validate AI output against the device's real properties.
 
     Drops entities referencing nonexistent properties, requires command
     properties to be writable, and shrinks the fanout range to units whose
-    properties actually exist. Raises LLMClassificationError when nothing
-    usable survives, with reasons suitable for the retry instructions.
+    properties actually exist. Returns the sanitized mapping plus
+    human-readable reasons for every dropped entity. Raises
+    LLMClassificationError when nothing usable survives, with reasons
+    suitable for the retry instructions.
     """
     if not isinstance(raw, dict):
         raise LLMClassificationError("top-level JSON value is not an object")
@@ -366,7 +370,7 @@ def sanitize_mapping(raw: dict[str, Any], properties_full: dict[str, Any]) -> Mo
     for error in errors:
         _LOGGER.debug("Dropped part of AI mapping: %s", error)
     mapping["entities"] = kept
-    return mapping  # type: ignore[return-value]
+    return mapping, errors  # type: ignore[return-value]
 
 
 def _ai_task_structure() -> dict[str, Any]:
@@ -432,8 +436,12 @@ async def async_classify_device(
     hass: HomeAssistant,
     device: ayla_iot_unofficial.device.Device,
     entity_id: str,
-) -> ModelMappingDict:
-    """Ask the AI task entity to map this device; one retry with feedback."""
+) -> tuple[ModelMappingDict, list[str]]:
+    """Ask the AI task entity to map this device; one retry with feedback.
+
+    Returns the sanitized mapping plus reasons for any entities dropped
+    during validation.
+    """
     last_error = ""
     last_reply = ""
     for attempt in range(2):
@@ -445,7 +453,7 @@ async def async_classify_device(
             data = await _generate_data(hass, device, instructions, entity_id)
             last_reply = data if isinstance(data, str) else json.dumps(data, default=str)
             raw = coerce_ai_task_result(data)
-            mapping = sanitize_mapping(raw, device.properties_full)
+            mapping, dropped = sanitize_mapping(raw, device.properties_full)
         except LLMClassificationError as err:
             last_error = str(err)
             _LOGGER.debug(
@@ -460,5 +468,5 @@ async def async_classify_device(
             device.oem_model_number,
             len(mapping.get("entities", [])),
         )
-        return mapping
+        return mapping, dropped
     raise LLMClassificationError(f"could not classify {device.oem_model_number}: {last_error}")

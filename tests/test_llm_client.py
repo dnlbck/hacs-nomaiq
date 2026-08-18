@@ -193,7 +193,8 @@ def test_summarize_empty():
 
 
 def test_sanitize_accepts_golden_mapping():
-    mapping = sanitize_mapping(dict(GOLDEN_WATER_CONTROLLER), _water_properties())
+    mapping, dropped = sanitize_mapping(dict(GOLDEN_WATER_CONTROLLER), _water_properties())
+    assert dropped == []
     assert mapping["source"] == "llm"
     assert mapping["fanout"]["range"] == [1, 2, 3, 4]
     assert len(mapping["entities"]) == 1
@@ -202,8 +203,9 @@ def test_sanitize_accepts_golden_mapping():
 def test_sanitize_shrinks_fanout_range():
     raw = dict(GOLDEN_WATER_CONTROLLER)
     raw["fanout"] = dict(raw["fanout"], range=[1, 2, 3, 4, 5, 6, 7, 8])
-    mapping = sanitize_mapping(raw, _water_properties(units=4))
+    mapping, dropped = sanitize_mapping(raw, _water_properties(units=4))
     assert mapping["fanout"]["range"] == [1, 2, 3, 4]
+    assert dropped == []  # fanout shrinking is normal operation, not a drop
 
 
 def test_sanitize_rejects_invented_properties():
@@ -237,13 +239,14 @@ def test_sanitize_keeps_valid_drops_invalid():
             {"kind": "sensor", "state_property": "nope"},
         ]
     }
-    mapping = sanitize_mapping(raw, _water_properties())
+    mapping, dropped = sanitize_mapping(raw, _water_properties())
     assert len(mapping["entities"]) == 1
+    assert dropped == ["state_property 'nope' does not exist"]
 
 
 def test_sanitize_unwraps_models_envelope():
     raw = {"models": {"water-controller": dict(GOLDEN_WATER_CONTROLLER)}}
-    mapping = sanitize_mapping(raw, _water_properties())
+    mapping, _ = sanitize_mapping(raw, _water_properties())
     assert mapping["entities"]
 
 
@@ -265,7 +268,7 @@ def _number_entity(**range_fields):
 
 def test_sanitize_keeps_valid_number_range():
     raw = {"entities": [_number_entity(min_value=0, max_value=240, step=5)]}
-    mapping = sanitize_mapping(raw, _water_properties())
+    mapping, _ = sanitize_mapping(raw, _water_properties())
     entity = mapping["entities"][0]
     assert entity["min_value"] == 0
     assert entity["max_value"] == 240
@@ -274,7 +277,7 @@ def test_sanitize_keeps_valid_number_range():
 
 def test_sanitize_strips_inverted_number_range():
     raw = {"entities": [_number_entity(min_value=100, max_value=0)]}
-    mapping = sanitize_mapping(raw, _water_properties())
+    mapping, _ = sanitize_mapping(raw, _water_properties())
     entity = mapping["entities"][0]
     assert "min_value" not in entity
     assert "max_value" not in entity
@@ -282,7 +285,7 @@ def test_sanitize_strips_inverted_number_range():
 
 def test_sanitize_strips_nonpositive_step():
     raw = {"entities": [_number_entity(min_value=0, max_value=100, step=-1)]}
-    mapping = sanitize_mapping(raw, _water_properties())
+    mapping, _ = sanitize_mapping(raw, _water_properties())
     entity = mapping["entities"][0]
     assert "step" not in entity
     assert "min_value" not in entity  # whole triple stripped together

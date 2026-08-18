@@ -46,6 +46,7 @@ class AdoptDeviceRepairFlow(RepairsFlow):
         self._picked_inline = False
         self._task: asyncio.Task | None = None
         self._mapping: dict[str, Any] | None = None
+        self._dropped: list[str] = []
         self._error: str | None = None
         self._lock_held = False
 
@@ -148,7 +149,7 @@ class AdoptDeviceRepairFlow(RepairsFlow):
 
         if self._task is not None:
             try:
-                self._mapping = self._task.result()
+                self._mapping, self._dropped = self._task.result()
             except asyncio.CancelledError:
                 raise
             except Exception as err:
@@ -176,6 +177,7 @@ class AdoptDeviceRepairFlow(RepairsFlow):
         """Clear the failure and classify again."""
         self._error = None
         self._mapping = None
+        self._dropped = []
         return await self.async_step_classify()
 
     async def async_step_preview(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -185,6 +187,11 @@ class AdoptDeviceRepairFlow(RepairsFlow):
         pretty = json.dumps(self._mapping, indent=2)
         if len(pretty) > MAX_PREVIEW_JSON_CHARS:
             pretty = pretty[:MAX_PREVIEW_JSON_CHARS] + "\n… (truncated)"
+        dropped = ""
+        if self._dropped:
+            dropped = "\n\n**Dropped during validation:**\n" + "\n".join(
+                f"- {reason}" for reason in self._dropped
+            )
         return self.async_show_menu(
             step_id="preview",
             menu_options=["apply", "discard"],
@@ -192,6 +199,7 @@ class AdoptDeviceRepairFlow(RepairsFlow):
                 "model": self._model,
                 "summary": llm_client.summarize_mapping(self._mapping),
                 "mapping_json": pretty,
+                "dropped": dropped,
             },
         )
 

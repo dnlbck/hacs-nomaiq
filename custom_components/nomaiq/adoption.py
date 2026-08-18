@@ -279,14 +279,15 @@ class AdoptionManager:
         self,
         device: ayla_iot_unofficial.device.Device,
         entity_id: str | None = None,
-    ) -> dict[str, Any]:
-        """Run the AI task and return the proposed mapping (not stored)."""
+    ) -> tuple[dict[str, Any], list[str]]:
+        """Run the AI task; return the proposed mapping plus validation drop reasons."""
         entity_id = entity_id or self.ai_task_entity_id
         if not entity_id:
             raise llm_client.LLMClassificationError(
                 "no AI Task entity configured for NomaIQ (set one in the integration's options)"
             )
-        return dict(await llm_client.async_classify_device(self.hass, device, entity_id))
+        mapping, dropped = await llm_client.async_classify_device(self.hass, device, entity_id)
+        return dict(mapping), dropped
 
     async def async_apply_mapping(self, model: str, mapping: dict[str, Any]) -> None:
         """Persist an approved mapping; caller schedules the entry reload."""
