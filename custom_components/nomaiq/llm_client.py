@@ -69,15 +69,17 @@ Respond with a JSON object of this shape (omit any field you don't need):
   },
   "entities": [
     {
-      "kind": "sensor" | "binary_sensor" | "switch" | "light" | "cover" | "number",
+      "kind": "sensor" | "binary_sensor" | "switch" | "light" | "cover" | "number" | "select",
       "id_suffix": "<short unique snake_case id, may contain {n}>",
       "state_property": "<property name>",
-      "command_property": "<property name; required for switch/light/cover/number>",
+      "command_property": "<property name; required for switch/light/cover/number/select>",
       "on_value": 1,
       "off_value": 0,
       "state_map": {"<raw value>": "opened|closed|opening|closing"},
       "transition_states": ["opening", "closing"],
       "command_value": "timestamp",
+      "options": ["<option label>", "..."],
+      "value_map": {"<option label>": "<raw value written to command_property>"},
       "name_property": "<optional>",
       "name_fallback": "<optional>",
       "device_class": "<optional HA device class>",
@@ -109,7 +111,12 @@ RULES:
    from the property name, unit, or current value (e.g. a humidity % setpoint -> 30-80,
    step 1). Omit them when unknown, and never output a range that excludes the
    property's current value.
-10. Allowed kinds are exactly the six listed. Never output select, climate, fan, or valve.
+10. Use kind "select" for an RW enum-like property (mode, fan speed, ...) only when you
+    can enumerate plausible option labels, and always include the property's current
+    value in options. Set value_map only when the raw values differ from the labels
+    (e.g. labels "Low"/"High" backed by raw values "0"/"1").
+11. Allowed kinds are exactly the seven listed. Never output climate, fan, valve, or
+    humidifier.
 
 EXAMPLE for a different device (model "sprinkler-x" with properties: Zone1_Installed RO
 boolean, Zone1_Run RW integer, Zone1_Run_Status RO boolean, Zone1_Label RO string, and
@@ -183,7 +190,7 @@ def coerce_ai_task_result(data: Any) -> dict[str, Any]:
     raise LLMClassificationError(f"AI task returned unsupported data type {type(data).__name__}")
 
 
-_KIND_ORDER = ("switch", "light", "cover", "number", "binary_sensor", "sensor")
+_KIND_ORDER = ("switch", "light", "cover", "number", "select", "binary_sensor", "sensor")
 
 
 def summarize_mapping(mapping: dict[str, Any]) -> str:

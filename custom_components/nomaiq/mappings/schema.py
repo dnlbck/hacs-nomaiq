@@ -12,10 +12,10 @@ from typing import Any, Literal, TypedDict
 
 SCHEMA_VERSION = 1
 
-EntityKind = Literal["sensor", "binary_sensor", "switch", "light", "cover", "number"]
+EntityKind = Literal["sensor", "binary_sensor", "switch", "light", "cover", "number", "select"]
 
 VALID_KINDS: frozenset[str] = frozenset(
-    {"sensor", "binary_sensor", "switch", "light", "cover", "number"}
+    {"sensor", "binary_sensor", "switch", "light", "cover", "number", "select"}
 )
 
 VALID_COMMAND_VALUES: frozenset[str] = frozenset({"timestamp"})
@@ -42,6 +42,8 @@ class EntityMappingDict(TypedDict, total=False):
     min_value: float
     max_value: float
     step: float
+    options: list[str]
+    value_map: dict[str, str]
 
 
 class FanoutDict(TypedDict, total=False):
@@ -91,6 +93,8 @@ class EntityMapping:
     min_value: float | None = None
     max_value: float | None = None
     step: float | None = None
+    options: tuple[str, ...] = ()
+    value_map: dict[str, str] | None = None
 
     @classmethod
     def from_dict(cls, data: EntityMappingDict) -> EntityMapping:
@@ -113,6 +117,8 @@ class EntityMapping:
             min_value=data.get("min_value"),
             max_value=data.get("max_value"),
             step=data.get("step"),
+            options=tuple(data.get("options", ())),
+            value_map=data.get("value_map"),
         )
 
 
@@ -186,6 +192,22 @@ def validate_mapping(data: Any) -> bool:
                 return False
             state_map = entity.get("state_map")
             if state_map is not None and not isinstance(state_map, dict):
+                return False
+        if kind == "select":
+            if command_prop is None:
+                return False
+            options = entity.get("options")
+            if (
+                not isinstance(options, list)
+                or not options
+                or not all(isinstance(option, str) for option in options)
+            ):
+                return False
+            value_map = entity.get("value_map")
+            if value_map is not None and not (
+                isinstance(value_map, dict)
+                and all(isinstance(k, str) and isinstance(v, str) for k, v in value_map.items())
+            ):
                 return False
     fanout = data.get("fanout")
     if fanout is not None:

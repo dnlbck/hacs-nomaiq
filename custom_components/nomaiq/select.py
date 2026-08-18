@@ -7,12 +7,14 @@ from dataclasses import dataclass, field
 import ayla_iot_unofficial
 import ayla_iot_unofficial.device
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NomaIQConfigEntry
 from .coordinator import NomaIQDataUpdateCoordinator
 from .entity import NomaIQEntity
+from .factory import async_setup_mapped_platform
 
 
 @dataclass(frozen=True)
@@ -65,6 +67,7 @@ async def async_setup_entry(
                 entities.append(NomaIQDehumSelect(coordinator, device, spec))
 
     async_add_entities(entities, update_before_add=False)
+    async_setup_mapped_platform(hass, entry, async_add_entities, Platform.SELECT)
 
 
 class NomaIQDehumSelect(NomaIQEntity, SelectEntity):

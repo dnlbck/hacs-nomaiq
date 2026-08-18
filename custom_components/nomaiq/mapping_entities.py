@@ -24,6 +24,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.number import NumberEntity
+from homeassistant.components.select import SelectEntity
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import callback
@@ -239,6 +240,47 @@ class MappingNumber(MappingEntityBase, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         await self._async_write(int(value) if value.is_integer() else value)
+
+
+class MappingSelect(MappingEntityBase, SelectEntity):
+    """Select for an enum-like RW property, with optional label mapping."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if self._state_prop is None:
+            # Same property read and written (the common enum case).
+            self._state_prop = self._command_prop
+
+    def _raw_to_label(self, value: Any) -> str:
+        """Translate a raw property value to an option label."""
+        raw = str(value)
+        if self._spec.value_map:
+            for label, mapped_raw in self._spec.value_map.items():
+                if mapped_raw == raw:
+                    return label
+        return raw
+
+    @property
+    def current_option(self) -> str | None:
+        value = self._raw_value()
+        if value is None:
+            return None
+        return self._raw_to_label(value)
+
+    @property
+    def options(self) -> list[str]:
+        """Spec options plus the current value when it isn't mapped."""
+        values = list(self._spec.options)
+        current = self.current_option
+        if current and current not in values:
+            values.append(current)
+        return values
+
+    async def async_select_option(self, option: str) -> None:
+        value: Any = option
+        if self._spec.value_map:
+            value = self._spec.value_map.get(option, option)
+        await self._async_write(_norm(value))
 
 
 class MappingCover(MappingEntityBase, CoverEntity):

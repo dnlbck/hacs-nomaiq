@@ -26,6 +26,7 @@ from .mapping_entities import (
     MappingEntityBase,
     MappingLight,
     MappingNumber,
+    MappingSelect,
     MappingSensor,
     MappingSwitch,
     format_template,
@@ -44,6 +45,7 @@ KIND_TO_PLATFORM: dict[str, Platform] = {
     "light": Platform.LIGHT,
     "cover": Platform.COVER,
     "number": Platform.NUMBER,
+    "select": Platform.SELECT,
 }
 
 _KIND_TO_CLASS: dict[str, type[MappingEntityBase]] = {
@@ -53,6 +55,7 @@ _KIND_TO_CLASS: dict[str, type[MappingEntityBase]] = {
     "light": MappingLight,
     "cover": MappingCover,
     "number": MappingNumber,
+    "select": MappingSelect,
 }
 
 

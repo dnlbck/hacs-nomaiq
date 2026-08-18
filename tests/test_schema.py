@@ -93,3 +93,44 @@ def test_non_numeric_range_fields_are_invalid():
 
 def test_non_dict_is_invalid():
     assert not validate_mapping(["not", "a", "mapping"])
+
+
+def test_select_mapping_is_valid():
+    assert validate_mapping(
+        {
+            "entities": [
+                {
+                    "kind": "select",
+                    "state_property": "mode",
+                    "command_property": "mode",
+                    "options": ["Auto", "Manual"],
+                    "value_map": {"Auto": "0", "Manual": "1"},
+                }
+            ]
+        }
+    )
+
+
+def test_select_requires_command_property():
+    assert not validate_mapping(
+        {"entities": [{"kind": "select", "state_property": "s", "options": ["a"]}]}
+    )
+
+
+def test_select_requires_options():
+    assert not validate_mapping({"entities": [{"kind": "select", "command_property": "c"}]})
+    assert not validate_mapping(
+        {"entities": [{"kind": "select", "command_property": "c", "options": []}]}
+    )
+
+
+def test_select_options_must_be_strings():
+    assert not validate_mapping(
+        {"entities": [{"kind": "select", "command_property": "c", "options": [1, 2]}]}
+    )
+
+
+def test_select_value_map_must_be_str_to_str():
+    base = {"kind": "select", "command_property": "c", "options": ["a"]}
+    assert not validate_mapping({"entities": [{**base, "value_map": {"a": 1}}]})
+    assert not validate_mapping({"entities": [{**base, "value_map": "a"}]})

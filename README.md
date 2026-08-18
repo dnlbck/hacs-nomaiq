@@ -75,8 +75,8 @@ Devices whose `oem_model_number` the integration doesn't natively support can be
 
 ### Notes and caveats
 
-- Adopted entities can be `sensor`, `binary_sensor`, `switch`, `light`, `cover`, and `number`. `select`/`humidifier`/`valve` kinds are not generated yet.
-- Forcing `dehum` through the adoption path loses the native `humidifier` and `select` entities for as long as it's forced.
+- Adopted entities can be `sensor`, `binary_sensor`, `switch`, `light`, `cover`, `number`, and `select`. `humidifier`/`valve` kinds are not generated yet.
+- Forcing `dehum` through the adoption path loses the native `humidifier` entity for as long as it's forced (the AI may re-propose `select` entities for its mode and fan speed).
 - Forced models get different entity unique IDs than their native entities; the native IDs are restored when un-forced.
 - After adopting, diagnostic sensors for properties now covered by the mapping are no longer created; their old registry entries may linger as unavailable until you remove them (cosmetic).
 - Small local models may struggle with devices that expose very many properties; the preview step always lets you inspect the proposal before applying.

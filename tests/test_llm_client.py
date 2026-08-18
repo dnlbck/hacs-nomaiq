@@ -189,6 +189,11 @@ def test_summarize_empty():
     assert summarize_mapping({"entities": []}) == "no entities"
 
 
+def test_summarize_includes_select():
+    mapping = {"entities": [{"kind": "switch"}, {"kind": "select"}, {"kind": "select"}]}
+    assert summarize_mapping(mapping) == "1 switch, 2 selects"
+
+
 # ---- sanitize_mapping --------------------------------------------------------
 
 
@@ -289,3 +294,35 @@ def test_sanitize_strips_nonpositive_step():
     entity = mapping["entities"][0]
     assert "step" not in entity
     assert "min_value" not in entity  # whole triple stripped together
+
+
+def test_sanitize_keeps_select_with_writable_command():
+    raw = {
+        "entities": [
+            {
+                "kind": "select",
+                "command_property": "Unit1_Manual_Switch",
+                "options": ["0", "1"],
+            }
+        ]
+    }
+    mapping, dropped = sanitize_mapping(raw, _water_properties())
+    assert dropped == []
+    assert mapping["entities"][0]["kind"] == "select"
+
+
+def test_sanitize_drops_select_with_read_only_command():
+    raw = {
+        "entities": [
+            {"kind": "sensor", "state_property": "Unit1_Manual_SwitchStatus"},
+            {
+                "kind": "select",
+                "state_property": "Unit1_Manual_SwitchStatus",
+                "command_property": "Unit1_Manual_SwitchStatus",  # RO
+                "options": ["a", "b"],
+            },
+        ]
+    }
+    mapping, dropped = sanitize_mapping(raw, _water_properties())
+    assert [entity["kind"] for entity in mapping["entities"]] == ["sensor"]
+    assert dropped == ["command_property 'Unit1_Manual_SwitchStatus' is read-only (RO)"]
