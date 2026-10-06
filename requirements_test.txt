@@ -2,4 +2,4 @@
 # homeassistant imports when the real package is unavailable (e.g. on Python
 # versions Home Assistant doesn't support yet).
 pytest
-ayla_iot_unofficial==1.5.2
+ayla_iot_unofficial>=1.5.2
