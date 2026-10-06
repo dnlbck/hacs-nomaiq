@@ -100,6 +100,13 @@ except ImportError:
     aiohttp_client = _module("homeassistant.helpers.aiohttp_client")
     aiohttp_client.async_get_clientsession = lambda hass: None
 
+    config_validation = _module("homeassistant.helpers.config_validation")
+
+    def config_entry_only_config_schema(domain):
+        return {domain: None}
+
+    config_validation.config_entry_only_config_schema = config_entry_only_config_schema
+
     typing_mod = _module("homeassistant.helpers.typing")
     typing_mod.ConfigType = dict
 
@@ -150,6 +157,7 @@ except ImportError:
     ha.config_entries = config_entries
     ha.helpers = helpers
     helpers.aiohttp_client = aiohttp_client
+    helpers.config_validation = config_validation
     helpers.typing = typing_mod
     helpers.update_coordinator = update_coordinator
     helpers.storage = storage
